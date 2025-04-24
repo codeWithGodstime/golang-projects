@@ -9,9 +9,12 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"github.com/codeWithGodstime/mini-postman/core"
 )
 
-var tabIndex = 0
+var tabIndex = 0;
+var requestBodyEntry *widget.Entry
+
 
 func SmallSideBar() fyne.CanvasObject {
 
@@ -42,9 +45,19 @@ func ToolBar() fyne.CanvasObject {
 
 func RequestEntry() fyne.CanvasObject {
 
-	requestTypeDropDownButton := widget.NewSelect([]string{"GET", "POST", "PATCH", "DELETE"}, func(s string) {})
+	requestTypeDropDownButton := widget.NewSelect([]string{"GET", "POST", "PATCH", "DELETE"}, nil)
+
+	requestTypeDropDownButton.Selected = "GET"
+	requestTypeDropDownButton.Refresh()
+
 	entry := widget.NewEntry()
-	sendButton := widget.NewButton("Send Request", nil)
+	sendButton := widget.NewButton("Send Request", func() {
+		log.Println(requestTypeDropDownButton.Selected, entry.Text)
+		method := requestTypeDropDownButton.Selected
+		url := entry.Text
+		log.Printf(requestBodyEntry.Text)
+		core.MakeRequestController(method, url, nil, requestBodyEntry.Text)
+	})
 
 	wrapper := container.NewBorder(
 		nil, nil,
@@ -57,7 +70,7 @@ func RequestEntry() fyne.CanvasObject {
 
 func MainContent() fyne.CanvasObject {
 
-	requestBodyEntry := widget.NewMultiLineEntry()
+	requestBodyEntry = widget.NewMultiLineEntry()
 	requestBodyEntry.SetPlaceHolder("Enter request body(JSON)....")
 
 	responseBodyEntry := widget.NewMultiLineEntry()

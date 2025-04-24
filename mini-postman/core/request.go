@@ -2,6 +2,7 @@ package core
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"net/http"
 	"time"
@@ -11,11 +12,6 @@ type Client struct {
 	client *http.Client
 }
 
-
-func (r *Client) GET(data: http.Request) (r  http.Response) {
-
-}
-
 // singleton instance
 var GlobalClient = &Client{
 	client: &http.Client{
@@ -23,7 +19,7 @@ var GlobalClient = &Client{
 	},
 }
 
-func (c *Client) Request(method, url, body string, header map[string]string) {
+func (c *Client) Request(method, url, body string, headers map[string]string) (*http.Response, error) {
 	var requestBody io.Reader
 
 	if body != "" {
