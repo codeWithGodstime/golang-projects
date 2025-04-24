@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -15,6 +17,16 @@ import (
 
 var tabIndex = 0
 var requestBodyEntry, responseBodyEntry *widget.Entry
+
+// utility function
+func formatJSON(input string) string {
+	var out bytes.Buffer
+	err := json.Indent(&out, []byte(input), "", "  ")
+	if err != nil {
+		return input // fallback to raw if JSON is invalid
+	}
+	return out.String()
+}
 
 func SmallSideBar() fyne.CanvasObject {
 
@@ -60,6 +72,8 @@ func RequestEntry() fyne.CanvasObject {
 			log.Println(requestBodyEntry.Text)
 
 			response, err := core.MakeRequestController(method, url, nil, requestBodyEntry.Text)
+			fmt.Println(response)
+
 			if err != nil {
 				fyne.Do(func() {
 					responseBodyEntry.SetText(err.Error())
@@ -75,7 +89,19 @@ func RequestEntry() fyne.CanvasObject {
 			}
 
 			responseBody := string(bodyBytes)
-			fyne.Do(func() {responseBodyEntry.SetText(responseBody)})		
+			fyne.Do(func() { responseBodyEntry.SetText(responseBody) })
+
+			// switch {
+			// case contentType == "":
+			// 	fyne.Do(func() { responseBodyEntry.SetText(responseBody) })
+			// case contentType == "application/json" || contentType == "application/json; charset=utf-8":
+			// 	fyne.Do(func() {responseBodyEntry.SetText(formatJSON(responseBody)) })
+			// case contentType == "text/html":
+			// 	fyne.Do(func() {responseBodyEntry.SetText("HTML Content Detected:\n\n" + responseBody)})
+			// default:
+			// 	responseBodyEntry.SetText("Unknown Content Type: " + contentType + "\n\n" + responseBody)
+			// }
+
 		}()
 	})
 
@@ -110,7 +136,7 @@ func MainContent() fyne.CanvasObject {
 		),
 		nil,
 		nil,
-		container.NewStack(bodySplit), 
+		container.NewStack(bodySplit),
 	)
 
 	return content
