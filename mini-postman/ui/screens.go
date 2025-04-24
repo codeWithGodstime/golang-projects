@@ -96,25 +96,21 @@ func MainContent() fyne.CanvasObject {
 	responseBodyEntry.SetPlaceHolder("Response will appear here...")
 	responseBodyEntry.Disable()
 
-	// Vertical splitter with adjustable ratio
 	bodySplit := container.NewVSplit(
 		requestBodyEntry,
 		responseBodyEntry,
 	)
-	bodySplit.SetOffset(0.3)
 
-	// Use container.NewMax to let it expand and fill available space
 	content := container.NewBorder(
 		ToolBar(),
-		nil,
-		nil,
-		nil,
 		container.NewVBox(
 			widget.NewSeparator(),
 			RequestEntry(),
 			widget.NewSeparator(),
-			container.NewMax(bodySplit), // fill remaining space
 		),
+		nil,
+		nil,
+		container.NewStack(bodySplit), 
 	)
 
 	return content
