@@ -17,6 +17,7 @@ func main() {
 		// ui.MainContent(),
 		ui.RequestTabs(),
 	)
+	layoutSplit.SetOffset(0.0)
 
 	w.SetMainMenu(fyne.NewMainMenu(
 		fyne.NewMenu("File",

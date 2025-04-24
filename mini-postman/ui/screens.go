@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"io"
 	"log"
 
 	"fyne.io/fyne/v2"
@@ -12,9 +13,8 @@ import (
 	"github.com/codeWithGodstime/mini-postman/core"
 )
 
-var tabIndex = 0;
-var requestBodyEntry *widget.Entry
-
+var tabIndex = 0
+var requestBodyEntry, responseBodyEntry *widget.Entry
 
 func SmallSideBar() fyne.CanvasObject {
 
@@ -55,8 +55,28 @@ func RequestEntry() fyne.CanvasObject {
 		log.Println(requestTypeDropDownButton.Selected, entry.Text)
 		method := requestTypeDropDownButton.Selected
 		url := entry.Text
-		log.Printf(requestBodyEntry.Text)
-		core.MakeRequestController(method, url, nil, requestBodyEntry.Text)
+
+		go func() {
+			log.Println(requestBodyEntry.Text)
+
+			response, err := core.MakeRequestController(method, url, nil, requestBodyEntry.Text)
+			if err != nil {
+				fyne.Do(func() {
+					responseBodyEntry.SetText(err.Error())
+				})
+				return
+			}
+			defer response.Body.Close()
+
+			bodyBytes, err := io.ReadAll(response.Body)
+			if err != nil {
+				responseBodyEntry.SetText("Failed to read response body: " + err.Error())
+				return
+			}
+
+			responseBody := string(bodyBytes)
+			fyne.Do(func() {responseBodyEntry.SetText(responseBody)})		
+		}()
 	})
 
 	wrapper := container.NewBorder(
@@ -69,27 +89,31 @@ func RequestEntry() fyne.CanvasObject {
 }
 
 func MainContent() fyne.CanvasObject {
-
 	requestBodyEntry = widget.NewMultiLineEntry()
-	requestBodyEntry.SetPlaceHolder("Enter request body(JSON)....")
+	requestBodyEntry.SetPlaceHolder("Enter request body (JSON)...")
 
-	responseBodyEntry := widget.NewMultiLineEntry()
+	responseBodyEntry = widget.NewMultiLineEntry()
 	responseBodyEntry.SetPlaceHolder("Response will appear here...")
 	responseBodyEntry.Disable()
 
+	// Vertical splitter with adjustable ratio
 	bodySplit := container.NewVSplit(
 		requestBodyEntry,
 		responseBodyEntry,
 	)
-	bodySplitWrapper := container.NewStack(bodySplit)
+	bodySplit.SetOffset(0.3)
 
-	content := container.NewStack(
-			container.NewVBox(
-			ToolBar(),
+	// Use container.NewMax to let it expand and fill available space
+	content := container.NewBorder(
+		ToolBar(),
+		nil,
+		nil,
+		nil,
+		container.NewVBox(
 			widget.NewSeparator(),
 			RequestEntry(),
 			widget.NewSeparator(),
-			bodySplitWrapper,
+			container.NewMax(bodySplit), // fill remaining space
 		),
 	)
 
