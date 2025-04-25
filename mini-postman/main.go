@@ -8,6 +8,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 
 	"github.com/codeWithGodstime/mini-postman/core"
 	"github.com/codeWithGodstime/mini-postman/ui"
@@ -32,8 +33,10 @@ func main() {
 		fmt.Println(err)
 	}
 
+	_, sideBarContainer := ui.SmallSideBar(appData.Collections)
+
 	layoutSplit := container.NewHSplit(
-		ui.SmallSideBar(appData.Collections),
+		sideBarContainer,
 		ui.RequestTabs(),
 	)
 	layoutSplit.SetOffset(0.2)
@@ -41,8 +44,20 @@ func main() {
 	w.SetMainMenu(fyne.NewMainMenu(
 		fyne.NewMenu("File",
 			fyne.NewMenuItem("New Collection", func() {
-				// new doc logic
+				dialog.NewEntryDialog("Enter a name for your collection", "", func(name string) {
+					if name != "" {
+						newCol := core.Collection{Name: name, Requests: []core.Request{}, Folders: []core.Folder{}}
+						appData.Collections = append(appData.Collections, newCol)
+
+						// data, _ := json.MarshalIndent(appData, "", "  ")
+						// os.WriteFile("db.json", data, 0644)
+						_, sideBarContainer = ui.SmallSideBar(appData.Collections)
+						// layoutSplit.Objects[0] = sideBarContainer
+						layoutSplit.Refresh()
+					}
+				}, w).Show()
 			}),
+
 			fyne.NewMenuItem("Open Collection", func() {
 				// new doc logic
 			}),

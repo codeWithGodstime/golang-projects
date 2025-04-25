@@ -62,7 +62,7 @@ func convertStructToMapForTree(collections []core.Collection) (map[string][]stri
 	return treeData, idLookup
 }
 
-func SmallSideBar(collections []core.Collection) fyne.CanvasObject {
+func SmallSideBar(collections []core.Collection) (fyne.CanvasObject, fyne.CanvasObject) {
 
 	treeData, idLookup := convertStructToMapForTree(collections)
 
@@ -97,7 +97,7 @@ func SmallSideBar(collections []core.Collection) fyne.CanvasObject {
 
 	sidebarContainer := container.New(layout.NewStackLayout(), tree)
 
-	return sidebarContainer
+	return tree,sidebarContainer
 }
 
 func ToolBar() fyne.CanvasObject {
