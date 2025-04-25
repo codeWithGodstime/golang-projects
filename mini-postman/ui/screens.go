@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -28,17 +29,73 @@ func formatJSON(input string) string {
 	return out.String()
 }
 
-func SmallSideBar() fyne.CanvasObject {
+func convertStructToMapForTree(collections []core.Collection) (map[string][]string, map[string]interface{}) {
+	treeData := make(map[string][]string)
+	idLookup := make(map[string]interface{})
 
-	sidebar := container.NewVBox(
-		layout.NewSpacer(),
-		widget.NewButton("Collection", func() {
-			log.Println("new collection created")
-		}),
-		layout.NewSpacer(),
+	for _, col := range collections {
+		colID := col.Name
+		treeData[""] = append(treeData[""], colID)
+		idLookup[colID] = col
+
+		// Top-level requests
+		for _, req := range col.Requests {
+			reqID := colID + "/" + req.Name
+			treeData[colID] = append(treeData[colID], reqID)
+			idLookup[reqID] = req
+		}
+
+		// Folders
+		for _, folder := range col.Folders {
+			folderID := colID + "/" + folder.Name
+			treeData[colID] = append(treeData[colID], folderID)
+			idLookup[folderID] = folder
+
+			for _, req := range folder.Requests {
+				reqID := folderID + "/" + req.Name
+				treeData[folderID] = append(treeData[folderID], reqID)
+				idLookup[reqID] = req
+			}
+		}
+	}
+
+	return treeData, idLookup
+}
+
+func SmallSideBar(collections []core.Collection) fyne.CanvasObject {
+
+	treeData, idLookup := convertStructToMapForTree(collections)
+
+	tree := widget.NewTree(
+		func(uid string) []string {
+			return treeData[uid]
+		},
+		func(uid string) bool {
+			_, isBranch := treeData[uid]
+			return isBranch
+		},
+		func(branch bool) fyne.CanvasObject {
+			return widget.NewLabel("Node")
+		},
+		func(uid string, branch bool, obj fyne.CanvasObject) {
+			parts := strings.Split(uid, "/")
+			obj.(*widget.Label).SetText(parts[len(parts)-1])
+		},
 	)
-	sidebarContainer := container.New(layout.NewHBoxLayout(), sidebar)
-	sidebarContainer.Resize(fyne.NewSize(20, 0))
+
+	tree.OnSelected = func(uid string) {
+		obj := idLookup[uid]
+		switch v := obj.(type) {
+		case core.Request:
+			fmt.Println("Request selected:", v.Method, v.URL)
+		case core.Folder:
+			fmt.Println("Folder:", v.Name)
+		case core.Collection:
+			fmt.Println("Collection:", v.Name)
+		}
+	}
+
+	sidebarContainer := container.New(layout.NewStackLayout(), tree)
 
 	return sidebarContainer
 }
