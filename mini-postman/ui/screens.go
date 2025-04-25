@@ -97,7 +97,7 @@ func SmallSideBar(collections []core.Collection) (fyne.CanvasObject, fyne.Canvas
 
 	sidebarContainer := container.New(layout.NewStackLayout(), tree)
 
-	return tree,sidebarContainer
+	return tree, sidebarContainer
 }
 
 func ToolBar() fyne.CanvasObject {
@@ -172,10 +172,11 @@ func RequestEntry() fyne.CanvasObject {
 }
 
 func MainContent() fyne.CanvasObject {
-	requestBodyEntry = widget.NewMultiLineEntry()
+
+	requestBodyEntry := widget.NewMultiLineEntry()
 	requestBodyEntry.SetPlaceHolder("Enter request body (JSON)...")
 
-	responseBodyEntry = widget.NewMultiLineEntry()
+	responseBodyEntry := widget.NewMultiLineEntry()
 	responseBodyEntry.SetPlaceHolder("Response will appear here...")
 	responseBodyEntry.Disable()
 
@@ -196,7 +197,55 @@ func MainContent() fyne.CanvasObject {
 		container.NewStack(bodySplit),
 	)
 
-	return content
+	// Stack to hold header input fields
+	headerFields := container.NewVBox()
+
+	// Function to add header fields
+	addHeaderField := func() {
+		keyEntry := widget.NewEntry()
+		keyEntry.SetPlaceHolder("Header Key")
+
+		valueEntry := widget.NewEntry()
+		valueEntry.SetPlaceHolder("Header Value")
+		
+		// keyEntry.SetExpand(true) // Make the key entry expand horizontally
+		// valueEntry.SetExpand(true) // Make the value entry expand horizontally
+
+
+		headerRow := container.NewHBox(
+				widget.NewLabel("Key: "),
+				keyEntry,
+				layout.NewSpacer(),
+				widget.NewLabel("Value: "),
+				valueEntry,
+			)
+		
+		headerRow.Resize(fyne.NewSize(0, 0))
+
+
+		headerFields.Add(headerRow)
+	}
+
+	addHeaderField()
+
+	addHeaderButton := widget.NewButton("Add Header", func() {
+		addHeaderField()
+		headerFields.Refresh()
+	})
+
+	formContainer := container.NewVBox(
+		headerFields,
+		addHeaderButton,
+	)
+
+	tabs := container.NewAppTabs()
+	headersTabContainer := container.NewTabItem("Headers", formContainer)
+	bodyTabContainer := container.NewTabItem("Body", content)
+
+	tabs.Append(headersTabContainer)
+	tabs.Append(bodyTabContainer)
+
+	return tabs
 }
 
 func makeTabWithClose(tabs *container.AppTabs, name string, content fyne.CanvasObject) *container.TabItem {
