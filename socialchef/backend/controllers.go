@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -12,8 +13,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
-
-var userCollection = DB.Collection("users")
 
 func CreateOrder(c *gin.Context) {
 	var order Order
@@ -126,6 +125,8 @@ func CheckPassword(hashedPassword, password string) bool {
 }
 
 func Register(c *gin.Context) {
+	userCollection := DB.Collection("users")
+
 	var user User
 
 	if err := c.ShouldBindJSON(&user); err != nil {
@@ -152,19 +153,23 @@ func Register(c *gin.Context) {
 }
 
 func Login(c *gin.Context) {
-	var input User
+	userCollection := DB.Collection("users")
+
+	var input UserInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	var user User
+	log.Println(input.Email, input)
 	err := userCollection.FindOne(context.Background(), bson.M{"email": input.Email}).Decode(&user)
+	log.Println(err)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
-
+	log.Println("reacher her")
 	if !CheckPassword(user.Password, input.Password) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
@@ -181,5 +186,5 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token", tokenString})
+	c.JSON(http.StatusOK, gin.H{"token": tokenString})
 }

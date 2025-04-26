@@ -1,6 +1,6 @@
 package main
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import "go.mongodb.org/mongo-driver/v2/bson"
 
 type Item struct {
 	Name     string `bson:"name" json:"name"`
@@ -8,7 +8,7 @@ type Item struct {
 }
 
 type Order struct {
-	ID           primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	ID           bson.ObjectID `bson:"_id,omitempty" json:"id"`
 	CustomerName string             `bson:"customerName" json:"customName"`
 	Phone        string             `bson:"phone" json:"phone"`
 	Items        []Item             `bson:"items" json:"items"`
@@ -18,7 +18,12 @@ type Order struct {
 }
 
 type User struct {
-	ID primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	ID       bson.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	Email    string             `bson:"email" json:"email"`
-    Password string             `bson:"password" json:"password"`
+	Password string             `bson:"password" json:"password"`
+}
+
+type UserInput struct {
+	Email    string `json:"email" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }
