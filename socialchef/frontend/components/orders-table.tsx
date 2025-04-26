@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Search } from "lucide-react"
+import { API_URL } from "@/lib/utils"
 
 type Order = {
   id: string
@@ -82,16 +83,11 @@ export function OrdersTable() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Mock API call
     const fetchOrders = async () => {
       try {
-        // In a real app, you would fetch from your API
-        // const response = await fetch("/api/orders")
-        // const data = await response.json()
-
-        // Using mock data instead
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-        setOrders(mockOrders)
+        const response = await fetch(`${API_URL}/orders`)
+        const data = await response.json()
+        setOrders(data)
       } catch (error) {
         console.error("Failed to fetch orders:", error)
       } finally {
@@ -104,14 +100,12 @@ export function OrdersTable() {
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
-      // In a real app, you would call your API
-      // await fetch(`/api/orders/${orderId}/status`, {
-      //   method: "PUT",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ status: newStatus }),
-      // })
+      await fetch(`${API_URL}/api/orders/${orderId}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      })
 
-      // Update local state
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
           order.id === orderId ? { ...order, status: newStatus as "New" | "Preparing" | "Done" } : order,
