@@ -148,17 +148,6 @@ func RequestEntry() fyne.CanvasObject {
 			responseBody := string(bodyBytes)
 			fyne.Do(func() { responseBodyEntry.SetText(responseBody) })
 
-			// switch {
-			// case contentType == "":
-			// 	fyne.Do(func() { responseBodyEntry.SetText(responseBody) })
-			// case contentType == "application/json" || contentType == "application/json; charset=utf-8":
-			// 	fyne.Do(func() {responseBodyEntry.SetText(formatJSON(responseBody)) })
-			// case contentType == "text/html":
-			// 	fyne.Do(func() {responseBodyEntry.SetText("HTML Content Detected:\n\n" + responseBody)})
-			// default:
-			// 	responseBodyEntry.SetText("Unknown Content Type: " + contentType + "\n\n" + responseBody)
-			// }
-
 		}()
 	})
 
@@ -197,32 +186,22 @@ func MainContent() fyne.CanvasObject {
 		container.NewStack(bodySplit),
 	)
 
-	// Stack to hold header input fields
 	headerFields := container.NewVBox()
 
-	// Function to add header fields
 	addHeaderField := func() {
 		keyEntry := widget.NewEntry()
 		keyEntry.SetPlaceHolder("Header Key")
+		keyEntryContainer := container.NewStack(keyEntry)
 
 		valueEntry := widget.NewEntry()
 		valueEntry.SetPlaceHolder("Header Value")
-		
-		// keyEntry.SetExpand(true) // Make the key entry expand horizontally
-		// valueEntry.SetExpand(true) // Make the value entry expand horizontally
+		valueEntryContainer := container.New(layout.NewStackLayout(), valueEntry)
 
-
-		headerRow := container.NewHBox(
-				widget.NewLabel("Key: "),
-				keyEntry,
-				layout.NewSpacer(),
-				widget.NewLabel("Value: "),
-				valueEntry,
-			)
-		
-		headerRow.Resize(fyne.NewSize(0, 0))
-
-
+		headerRow := container.NewGridWithRows(
+			1,
+			keyEntryContainer,
+			valueEntryContainer, 
+		)
 		headerFields.Add(headerRow)
 	}
 
