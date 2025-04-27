@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"strings"
 
 	"fyne.io/fyne/v2"
@@ -17,14 +16,13 @@ import (
 )
 
 var tabIndex = 0
-var requestBodyEntry, responseBodyEntry *widget.Entry
 
 // utility function
 func formatJSON(input string) string {
 	var out bytes.Buffer
 	err := json.Indent(&out, []byte(input), "", "  ")
 	if err != nil {
-		return input // fallback to raw if JSON is invalid
+		return input
 	}
 	return out.String()
 }
@@ -112,7 +110,7 @@ func ToolBar() fyne.CanvasObject {
 	return toolbar
 }
 
-func RequestEntry() fyne.CanvasObject {
+func RequestEntryWithTypeAndButtonContainer(headers map[string]string, requestBodyEntry, responseBodyEntry *widget.Entry) fyne.CanvasObject {
 
 	requestTypeDropDownButton := widget.NewSelect([]string{"GET", "POST", "PATCH", "DELETE"}, nil)
 
@@ -121,14 +119,12 @@ func RequestEntry() fyne.CanvasObject {
 
 	entry := widget.NewEntry()
 	sendButton := widget.NewButton("Send Request", func() {
-		log.Println(requestTypeDropDownButton.Selected, entry.Text)
 		method := requestTypeDropDownButton.Selected
 		url := entry.Text
 
 		go func() {
-			log.Println(requestBodyEntry.Text)
 
-			response, err := core.MakeRequestController(method, url, nil, requestBodyEntry.Text)
+			response, err := core.MakeRequestController(method, url, headers, requestBodyEntry.Text)
 			fmt.Println(response)
 
 			if err != nil {
@@ -162,6 +158,8 @@ func RequestEntry() fyne.CanvasObject {
 
 func MainContent() fyne.CanvasObject {
 
+	requestHeaders := make(map[string]string)
+
 	requestBodyEntry := widget.NewMultiLineEntry()
 	requestBodyEntry.SetPlaceHolder("Enter request body (JSON)...")
 
@@ -178,7 +176,7 @@ func MainContent() fyne.CanvasObject {
 		ToolBar(),
 		container.NewVBox(
 			widget.NewSeparator(),
-			RequestEntry(),
+			RequestEntryWithTypeAndButtonContainer(requestHeaders, requestBodyEntry, responseBodyEntry),
 			widget.NewSeparator(),
 		),
 		nil,
@@ -197,10 +195,27 @@ func MainContent() fyne.CanvasObject {
 		valueEntry.SetPlaceHolder("Header Value")
 		valueEntryContainer := container.New(layout.NewStackLayout(), valueEntry)
 
+		updateHeader := func() {
+			key := keyEntry.Text
+			value := valueEntry.Text
+
+			if key != "" && value != "" {
+				requestHeaders[key] = value
+			}
+		}
+
+		keyEntry.OnChanged = func(s string) {
+			updateHeader()
+		}
+
+		valueEntry.OnChanged = func(s string) {
+			updateHeader()
+		}
+
 		headerRow := container.NewGridWithRows(
 			1,
 			keyEntryContainer,
-			valueEntryContainer, 
+			valueEntryContainer,
 		)
 		headerFields.Add(headerRow)
 	}
